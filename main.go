@@ -8,7 +8,6 @@ import (
 	"pfeifer.dev/mapd/cereal"
 	"pfeifer.dev/mapd/cli"
 	"pfeifer.dev/mapd/maps"
-	m "pfeifer.dev/mapd/math"
 	ms "pfeifer.dev/mapd/settings"
 )
 
@@ -80,6 +79,13 @@ func main() {
 		if carStateSuccess {
 			state.UpdateCarState(carData)
 			UpdateCurveSpeed(&state)
+
+			// Kalman filter
+			if state.PositionKF.IsInitialized() {
+				state.PositionKF.SetVelocity(state.Car.VEgo, state.LastGPSBearing)
+				dt := state.Car.UpdateTime.DiffMA.Estimate
+				state.Position = state.PositionKF.Predict(dt)
+			}
 		}
 
 		modelData, modelSuccess := model.Read()
@@ -89,10 +95,12 @@ func main() {
 
 		location, gpsSuccess := gps.Read()
 		if gpsSuccess {
+			// Kalman filter
+			state.LastGPSBearing = float64(location.BearingDeg())
+			state.Position = state.PositionKF.Update(location.Latitude(), location.Longitude())
 			state.DistanceSinceLastPosition = 0
-			state.Position = m.PosFromLocation(location)
 			box := state.Data.Box()
-			pos := m.PosFromLocation(location)
+			pos := state.Position
 			if len(state.Data.Ways()) == 0 || !box.PosInside(pos) {
 				state.Data, err = maps.FindWaysAroundPosition(pos)
 				if err != nil {
