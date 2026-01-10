@@ -1,0 +1,47 @@
+name: Build mapd
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up QEMU
+      uses: docker/setup-qemu-action@v3
+
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v3
+
+    - name: Build for arm64
+      uses: docker/build-push-action@v5
+      with:
+        context: .
+        platforms: linux/arm64
+        push: false
+        tags: pfeiferj/mapd:latest
+        cache-from: type=gha
+        cache-to: type=gha,mode=max
+        outputs: type=local,dest=./output
+
+    - name: Extract mapd binary
+      run: |
+        ls -la ./output/
+        cp ./output/usr/local/app/mapd ./mapd
+        chmod +x ./mapd
+        file ./mapd
+
+    - name: Upload mapd binary
+      uses: actions/upload-artifact@v4
+      with:
+        name: mapd-arm64
+        path: ./mapd
+        retention-days: 30
