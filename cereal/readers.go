@@ -33,3 +33,7 @@ func GpsLocationReader(evt log.Event) (log.GpsLocationData, error) {
 func GpsLocationExternalReader(evt log.Event) (log.GpsLocationData, error) {
 	return evt.GpsLocationExternal()
 }
+
+func LiveLocationKalmanReader(evt log.Event) (log.LiveLocationKalman, error) {
+	return evt.LiveLocationKalmanDEPRECATED()
+}

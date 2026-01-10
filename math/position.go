@@ -15,6 +15,19 @@ func PosFromLocation(loc log.GpsLocationData) Position {
 	return Position{latitudeDeg: loc.Latitude(), longitudeDeg: loc.Longitude()}
 }
 
+//extracts position from llk
+func PosFromLLK(llk log.LiveLocationKalman) (Position, bool) {
+	posGeodetic, err := llk.PositionGeodetic()
+	if err != nil || !posGeodetic.Valid() {
+		return Position{}, false
+	}
+	values, err := posGeodetic.Value()
+	if err != nil || values.Len() < 2 {
+		return Position{}, false
+	}
+	return Position{latitudeDeg: values.At(0), longitudeDeg: values.At(1)}, true
+}
+
 type Position struct {
 	latitudeDeg  float64
 	longitudeDeg float64
