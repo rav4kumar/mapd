@@ -25,8 +25,6 @@ type State struct {
 	VisionCurveMA             m.MovingAverage
 	NextAdvisorySpeed         Upcoming[float32]
 	NextHazard                Upcoming[string]
-	PositionKF                *m.PositionKalman
-	LastGPSBearing            float64
 }
 
 func (s *State) Init() {
@@ -35,7 +33,6 @@ func (s *State) Init() {
 	s.NextHazard = NewUpcoming(10, "", checkWayForHazardChange)
 	s.NextAdvisorySpeed = NewUpcoming(10, 0, checkWayForAdvisorySpeedChange)
 	s.SpeedLimit.Init()
-	s.PositionKF = m.NewPositionKalman()
 }
 
 
